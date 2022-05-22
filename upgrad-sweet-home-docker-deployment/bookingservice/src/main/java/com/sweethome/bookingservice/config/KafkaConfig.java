@@ -17,7 +17,7 @@ public class KafkaConfig {
 		   Properties properties = new Properties();
 		//Update the IP adress of Kafka server here//
 
-		//properties.put("bootstrap.servers", "ec2-18-206-108.compute-1.amazonaws.com:9092");
+			properties.put("bootstrap.servers", "kafka:9092");
 	        properties.put("acks", "all");
 	        properties.put("retries", 0);
 	        properties.put("linger.ms", 0);
