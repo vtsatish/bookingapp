@@ -1,0 +1,89 @@
+version: '3.3'
+# Define services
+services:
+# All microservices
+  paymentservice:
+    build: paymentservice
+    container_name: paymentservice
+    image: reservation/paymentservice:1.0.0
+    ports:
+    - "8083:8083" # Forward the exposed port 8083 to port 8083 on the host machine
+    networks:
+      - netreservation
+    environment:
+      EUREKA_HOST_NAME: 10.104.46.69
+    depends_on:
+      - eurekaserver # This service depends on eureka server. Start that first.
+  bookingservice:
+    build: bookingservice
+    container_name: bookingservice
+    image: reservation/bookingservice:1.0.0
+    ports:
+      - "8080:8080" # Forward the exposed port 8083 to port 8083 on the host machine
+    networks:
+      - netreservation
+    environment:
+      EUREKA_HOST_NAME: 10.104.46.69
+    depends_on:
+      - eurekaserver # This service depends on eureka server. Start that first.
+      - kafka
+  notificationservice:
+    build: notificationservice
+    container_name: notificationservice
+    image: reservation/notificationservice:1.0.0
+    networks:
+      - netreservation
+    environment:
+      EUREKA_HOST_NAME: 10.104.46.69
+    depends_on:
+      - kafka
+  kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+    networks:
+      - netreservation
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    container_name: zookeeper
+    volumes:
+      - "zookeeper_data:/bitnami"
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - netreservation
+  eurekaserver:
+    build: eurekaserver
+    container_name: eurekaserver
+    image: rservation/eurekaserver:1.0.0
+    hostname: eureka-service
+    ports:
+      - "8761:8761" # Map the exposed port 8761 on container to port 8761 on the host machine
+    networks:
+      - netreservation
+    environment:
+      EUREKA_HOST_NAME: 10.104.46.69
+
+networks:
+  netreservation:
+    driver: bridge
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+
